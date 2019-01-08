@@ -1,0 +1,58 @@
+import matplotlib.pyplot as plt
+import collections
+import json
+
+msg = r"path_to_kafka_output"
+
+with open(msg) as f:
+    data = json.load(f)
+    #content = f.readlines()
+
+ip=[]
+time=[]
+for line in data:
+    ip.append(line["remote_host"])
+    time.append(line["time_received"])
+
+
+
+c = collections.Counter(time)
+c = sorted(c.items())
+timelabel = [i[0][18:20] for i in c]
+freq = [i[1] for i in c]
+
+
+#put the plot in a seperate window
+# %matplotlib qt
+plt.bar(timelabel, freq)
+plt.title("Dataflow by time")
+plt.xlabel("Time")
+plt.ylabel("Frequency")
+plt.show()
+
+
+
+#The attack period is 36 second to 53 second
+
+for x in range(35,53):
+    attackip = []
+    for row in data:
+        attacktime = row["time_received"][18:20]
+        if x < int(attacktime) < x+2:
+            attackip.append(row["remote_host"])
+    
+    d = collections.Counter(attackip)
+    d = sorted(d.items())
+    locals()["suspect"+ str(x+1)] = []
+    for i in d:
+        if i[1]>2:
+            locals()["suspect"+ str(x+1)].append(i[0])
+
+
+
+#Set hacker equals to the suspect IP in the first second. Find the IPs that show up every second among attacking time period
+
+hacker = suspect36
+for y in range(36,53): 
+    hacker = list(set(locals()["suspect"+ str(y+1)]).intersection(hacker))
+
