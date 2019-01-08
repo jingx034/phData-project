@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jan 4 17:11:05 2019
 
-@author: Wen
-"""
 from __future__ import print_function
 from kafka import KafkaProducer
 from datetime import datetime
