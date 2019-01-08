@@ -1,0 +1,59 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jan 4 17:11:05 2019
+
+@author: Wen
+"""
+from __future__ import print_function
+from kafka import KafkaProducer
+from datetime import datetime
+import time
+import json
+
+def get_format(rawfile):
+    while True:
+        s = next(rawfile)
+        row = [ ]
+        qe = qp = None 
+        for s in s.replace('\r','').replace('\n','').split(' '):
+            if qp:
+                qp.append(s)
+            elif '' == s: 
+                row.append('')
+            elif '"' == s[0]: 
+                qp = [ s ]
+                qe = '"'
+            elif '[' == s[0]: 
+                qp = [ s ]
+                qe = ']'
+            else:
+                row.append(s)
+            l = len(s)
+            if l and qe == s[-1]: 
+                if l == 1 or s[-2] != '\\': 
+                    row.append(' '.join(qp)[1:-1].replace('\\'+qe, qe))
+                    qp = qe = None
+        yield row
+
+
+def send_message(producer, topic, input):
+    with open(input, 'r') as log:
+        rows = get_format(log)
+        for message_raw in rows:
+            producer.send(topic, json.dumps({'remote_host': message_raw[0],
+                                              'user-identifier': message_raw[1],
+                                              'frank': message_raw[2],
+                                              'time_received': message_raw[3],
+                                              'request_first_line': message_raw[4],
+                                              'status': message_raw[5],
+                                              'size_bytes': message_raw[6],
+                                              'request_header_referer': message_raw[7],
+                                              'request_header_user_agent': message_raw[8]}))
+
+
+host = 'localhost:9092'
+topic = 'DDOS_detect'
+producer = KafkaProducer(bootstrap_servers=host)
+start=datetime.now()
+send_message(producer, topic, True)
+print("Time taken to send all the logs:", datetime.now()-start)
