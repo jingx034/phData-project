@@ -7,3 +7,4 @@ Using Spark read from Kafka and find the high frequent IPs based on the built-in
 
 ## Python-Analysis:
 Output the file from Kafka. Use Python to get graph, and visualize the result.
+
